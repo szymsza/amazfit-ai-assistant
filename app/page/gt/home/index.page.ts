@@ -1,7 +1,7 @@
 import * as hmUI from '@zos/ui'
 import { log as Logger } from '@zos/utils'
-import { createRecorder } from '@zos/media'
-import type { RecorderInstance } from '@zos/media'
+import { createRecorder, createPlayer } from '@zos/media'
+import type { RecorderInstance, PlayerInstance } from '@zos/media'
 import {
   RING_STYLE,
   BTN_STYLE,
@@ -43,6 +43,7 @@ const zepposWidget = hmUI.widget as typeof hmUI.widget & { readonly CLICK_AREA: 
 // Module-level state (Page.Option only accepts lifecycle methods + state object)
 let appState = AppState.Idle
 let recorder: RecorderInstance | null = null
+let player: PlayerInstance | null = null
 let stateTextWidget: ReturnType<typeof hmUI.createWidget> | null = null
 let btnWidget: ReturnType<typeof hmUI.createWidget> | null = null
 
@@ -52,11 +53,35 @@ function setState(newState: AppState): void {
   btnWidget?.setProperty(hmUI.prop.COLOR, BTN_COLORS[newState])
 }
 
+function startPlayback(): void {
+  try {
+    player = createPlayer()
+    player.prepare()
+    player.setSource({ filePath: RECORDING_PATH })
+    player.addEventListener('play_end', () => {
+      logger.debug('playback ended')
+      player = null
+      setState(AppState.Idle)
+    })
+    player.addEventListener('play_error', (result) => {
+      logger.error('playback error: ' + JSON.stringify(result))
+      player = null
+      setState(AppState.Idle)
+    })
+    player.start()
+    setState(AppState.Playing)
+  } catch (e) {
+    logger.error('player start failed: ' + (e as Error).message)
+    player = null
+    setState(AppState.Idle)
+  }
+}
+
 function stopRecording(): void {
   if (recorder) {
     try { recorder.stop() } catch (_) { /* may already be stopped */ }
   }
-  setState(AppState.Idle)
+  startPlayback()
 }
 
 function startRecording(): void {
@@ -66,7 +91,7 @@ function startRecording(): void {
     recorder.setFormat({ codec: 'OPUS', sampleRate: 16000, filePath: RECORDING_PATH })
     recorder.addEventListener('record_end', () => {
       logger.debug('recording ended')
-      setState(AppState.Idle)
+      startPlayback()
     })
     recorder.start()
     setState(AppState.Recording)
@@ -106,6 +131,10 @@ Page({
     if (recorder) {
       try { recorder.stop() } catch (_) { /* already stopped */ }
       recorder = null
+    }
+    if (player) {
+      try { player.stop() } catch (_) { /* already stopped */ }
+      player = null
     }
     stateTextWidget = null
     btnWidget = null

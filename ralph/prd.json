@@ -43,7 +43,7 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "HUMAN CHECKPOINT: User must verify recording and playback works on simulator/device before continuing."
     },
     {

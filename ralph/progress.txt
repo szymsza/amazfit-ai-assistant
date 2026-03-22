@@ -28,3 +28,15 @@ Started: Ne 22. března 2026, 13:31:24 CET
   - `HmUIPropertyValue` is narrow (`string|number|boolean|undefined`) — can't pass objects to `setProperty`; use `prop.COLOR` for colour updates
   - Namespace augmentation doesn't work for `export =` style modules; use typed intersection at call site instead
 ---
+
+## 2026-03-22 - US-003
+- Added audio playback via Zepp OS Player API: recorded OPUS file plays back automatically after recording stops
+- `createPlayer` / `PlayerInstance` types already declared in `app/global.d.ts` from US-002 — no new type declarations needed
+- Player lifecycle: `prepare()` → `setSource({ filePath })` → `start()`; cleanup on `play_end` / `play_error` events
+- `stopRecording()` now calls `startPlayback()` instead of transitioning to Idle; `record_end` event also triggers `startPlayback()`
+- Player cleaned up in `onDestroy` alongside recorder
+- Files changed: app/page/gt/home/index.page.ts, ralph/prd.json
+- **Learnings for future iterations:**
+  - Player API mirrors Recorder API: `prepare()` then `setSource()` then `start()`; listen for `play_end`/`play_error` to know when done
+  - Both recorder and player must be stopped in `onDestroy` to avoid resource leaks
+---
