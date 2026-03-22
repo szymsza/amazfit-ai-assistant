@@ -73,3 +73,13 @@ Started: Ne 22. března 2026, 13:31:24 CET
   - `@zos/fs` paths are relative to `/data` dir: `data://recording.opus` → `openSync({ path: 'recording.opus' })`
   - `sendToSideService()` guards with `if (appState !== AppState.Recording) return` to prevent double-invocation from both manual stop and `record_end` event
 ---
+
+## 2026-03-22 - US-006
+- US-006 acceptance criteria were fully satisfied by the US-005 implementation; no new code required
+- Watch already sends OPUS audio to Side Service via `BaseApp.request()` (BLE Messaging API)
+- Watch already receives the response ArrayBuffer, writes it to `response.opus`, and plays it via Player API
+- Both `app/` and `server/` typechecks pass without changes
+- Files changed: ralph/prd.json (passes: true)
+- **Learnings for future iterations:**
+  - When stories overlap in implementation scope (US-005 and US-006 both cover watch↔side BLE), it is valid to mark the later story as passing if the code already satisfies its acceptance criteria
+---
