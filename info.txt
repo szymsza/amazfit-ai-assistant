@@ -1,0 +1,70 @@
+Amazfit Voice Assistant
+=======================
+
+Voice AI assistant for Amazfit Balance running on Zepp OS.
+Ask questions by voice, get spoken answers from Claude or ChatGPT.
+
+Architecture
+------------
+Monorepo with two components:
+
+  app/    - Zepp OS mini-app (JavaScript, runs on watch + phone Side Service)
+  server/ - Backend API (single endpoint: receives audio, returns audio)
+
+How it works:
+
+  1. Watch: user presses button, records voice (OPUS via Recorder API)
+  2. Watch -> Phone: audio sent over BLE to Side Service (runs inside Zepp companion app)
+  3. Phone -> Server: Side Service makes single fetch() POST with audio bytes
+  4. Server pipeline: STT (Groq Whisper) -> LLM (Claude or ChatGPT) -> TTS (OpenAI TTS)
+  5. Server -> Phone: returns audio response (MP3/OPUS)
+  6. Phone -> Watch: audio transferred back over BLE
+  7. Watch: plays response via Player API
+
+No separate Android app needed - Side Service runs inside the Zepp companion app.
+
+Key APIs used (watch side):
+  - Recorder API (OPUS) for voice capture
+  - Player API (MP3/OPUS) for audio playback
+  - Messaging/TransferFile API for watch <-> phone BLE communication
+  - Fetch API (Side Service) for HTTP requests to our server
+
+Documentation
+-------------
+Zepp OS Quick Start:          https://docs.zepp.com/docs/guides/quick-start/
+Zepp OS Media API:            https://docs.zepp.com/docs/reference/device-app-api/newAPI/media/
+Zepp OS Fetch API:            https://docs.zepp.com/docs/reference/side-service-api/fetch/
+Zepp OS Fetch Sample App:     https://docs.zepp.com/docs/samples/app/fetchAPI/
+Zepp OS Messaging API:        https://docs.zepp.com/docs/reference/side-service-api/messaging/
+Easy Media Library:           https://github.com/silver-zepp/zeppos-easy-media
+Zepp OS Device List:          https://docs.zepp.com/docs/reference/related-resources/device-list/
+
+Claude API:                   https://docs.anthropic.com/en/docs
+OpenAI API (GPT + TTS):      https://platform.openai.com/docs
+Groq API (Whisper STT):       https://console.groq.com/docs
+
+Plan
+----
+ 1. Read the Zepp OS docs thoroughly (framework intro, API references, sample apps)
+ 2. Set up Zepp developer environment (install Zepp CLI, simulator, register dev account)
+ 3. Create a Zepp OS project from template, run it in the simulator
+ 4. Prototype: small app that records audio and plays it back locally on the watch
+ 5. Prototype: send recorded audio from watch -> Side Service -> external server, receive audio back
+ 6. Deploy a basic echo server (accepts audio POST, returns the same audio as response)
+ 7. Test the full round-trip: watch -> phone -> server -> phone -> watch
+ 8. Test on a real Amazfit Balance device
+ 9. Make the server functional:
+    - Groq Whisper API for speech-to-text
+    - Claude API and ChatGPT API for LLM response
+    - OpenAI TTS API for text-to-speech
+10. Improve the app UI:
+    - Show transcribed question text on screen
+    - Show AI response text on screen
+    - Loading/status indicators
+11. Make the app configurable (settings page):
+    - Groq Whisper API key
+    - LLM provider selection (Claude / ChatGPT / Groq)
+    - LLM API key
+    - Model selection
+    - TTS provider/voice selection
+12. Polish and release
