@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "checkJs": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "rootDir": ".",
+    "typeRoots": []
+  },
+  "include": [
+    "global.d.ts",
+    "app.js",
+    "page/**/*.js",
+    "app-side/**/*.js",
+    "setting/**/*.js",
+    "utils/**/*.js"
+  ],
+  "exclude": ["node_modules", "**/node_modules/*", "../node_modules"]
+}

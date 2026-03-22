@@ -1,0 +1,21 @@
+{
+  "name": "amazfit-voice-assistant",
+  "version": "1.0.0",
+  "description": "Voice AI assistant for Amazfit Balance",
+  "main": "app.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit --project jsconfig.json",
+    "dev": "zeus dev",
+    "build": "zeus build",
+    "preview": "zeus preview"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@zeppos/device-types": "^3.0.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@zeppos/zml": "^0.0.38"
+  }
+}
