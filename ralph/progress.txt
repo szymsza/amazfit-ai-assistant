@@ -139,6 +139,22 @@ Started: Ne 22. března 2026, 13:31:24 CET
   - Anthropic API requires `anthropic-version` header and `max_tokens` in body (unlike OpenAI-compatible APIs)
   - Anthropic response: `content` is an array of typed blocks; find `type === 'text'` to get the text response
   - Model IDs: `claude-haiku-4-5` (fast/cheap), `claude-sonnet-4-6` (higher quality)
+- Groq TTS: POST to `https://api.groq.com/openai/v1/audio/speech`; model `playai-tts`; JSON body `{ model, input, voice }`; response is WAV binary
+- ffmpeg WAV→OPUS: `spawn('ffmpeg', ['-f','wav','-i','pipe:0','-c:a','libopus','-b:a','32k','-ar','16000','-ac','1','-f','ogg','pipe:1'])`; write WAV to stdin, read OPUS from stdout
+
+---
+
+## 2026-03-28 - US-012
+- Created `server/src/tts.ts` with `synthesizeSpeech(text, groqApiKey, voice)` function
+- Calls Groq TTS API: POST https://api.groq.com/openai/v1/audio/speech, model `playai-tts`, JSON body `{ model, input, voice }`
+- WAV response converted to OPUS via ffmpeg child_process spawn: stdin receives WAV, stdout emits OGG/OPUS at 16kHz mono 32kbps
+- Default voice: `austin`
+- Files changed: server/src/tts.ts (new), ralph/prd.json, ralph/progress.txt
+- **Learnings for future iterations:**
+  - Groq TTS endpoint is `/audio/speech` (same as OpenAI TTS), model is `playai-tts` (not `canopylabs/orpheus-v1-english` as noted in PRD)
+  - ffmpeg WAV→OPUS: pipe stdin as raw WAV (`-f wav -i pipe:0`), output OGG container with libopus codec to stdout (`-f ogg pipe:1`)
+  - No extra npm packages needed — `child_process.spawn` is built into Node; `fetch` + `Buffer` are Node 18+ globals
+  - ffmpeg must be installed on the server host (`apt install ffmpeg` or equivalent)
 ---
 
 ## 2026-03-28 - US-011

@@ -182,7 +182,7 @@
         "Typecheck passes"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -281,6 +281,21 @@
       "notes": "This requires API keys for OpenAI and Anthropic. Yield control to the user to provide keys and review results."
     },
     {
+      "id": "US-020",
+      "title": "Watch UI - error state with dismissible error screen",
+      "description": "As a user, I want to see a clear error message when something goes wrong and be able to dismiss it and return to the home screen.",
+      "acceptanceCriteria": [
+        "Any error from the server (network failure, non-2xx response, STT/LLM/TTS failure) transitions the watch UI to an Error state",
+        "Error screen displays the error message text",
+        "Tapping anywhere on the error screen dismisses it and returns to Idle state",
+        "Error state has a distinct visual style (e.g. red background or icon) to distinguish it from normal states",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": "HUMAN CHECKPOINT: User must verify the error screen displays correctly and tap-to-dismiss works on the simulator/device."
+    },
+    {
       "id": "US-019",
       "title": "Code quality: TypeScript strictness, Prettier, and cleanup",
       "description": "As a developer, I want the codebase to be clean, strictly typed, and consistently formatted so it is easy to maintain and extend.",
@@ -293,7 +308,7 @@
         "Code is readable: clear variable names, no overly clever one-liners",
         "Typecheck passes"
       ],
-      "priority": 19,
+      "priority": 20,
       "passes": false,
       "notes": "Run this story last — after all features are implemented — so refactoring does not conflict with in-progress feature work."
     }
