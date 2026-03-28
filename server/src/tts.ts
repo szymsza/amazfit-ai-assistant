@@ -1,8 +1,13 @@
-import { spawn } from 'child_process';
+import { spawnSync } from 'child_process';
+import OpusScript from 'opusscript';
 
 const GROQ_TTS_URL = 'https://api.groq.com/openai/v1/audio/speech';
 const DEFAULT_VOICE = 'austin';
-const TTS_MODEL = 'playai-tts';
+const TTS_MODEL = 'canopylabs/orpheus-v1-english';
+
+const RATE = 16000;
+const CHANNELS = 1;
+const FRAME_SIZE = 960; // 60ms at 16kHz — matches Zepp OS recorder output
 
 export async function synthesizeSpeech(
   text: string,
@@ -19,6 +24,7 @@ export async function synthesizeSpeech(
       model: TTS_MODEL,
       input: text,
       voice,
+      response_format: 'wav',
     }),
   });
 
@@ -28,42 +34,42 @@ export async function synthesizeSpeech(
   }
 
   const wavBuffer = Buffer.from(await response.arrayBuffer());
-  return convertWavToOpus(wavBuffer);
+  return wavToZeppOpus(wavBuffer);
 }
 
-function convertWavToOpus(wavBuffer: Buffer): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const ffmpeg = spawn('ffmpeg', [
-      '-f', 'wav',
-      '-i', 'pipe:0',
-      '-c:a', 'libopus',
-      '-b:a', '32k',
-      '-ar', '16000',
-      '-ac', '1',
-      '-f', 'ogg',
-      'pipe:1',
-    ]);
+/**
+ * Convert WAV (16-bit PCM) to Zepp OS framed Opus.
+ * Resamples to 16kHz mono via ffmpeg first, then encodes with opusscript.
+ * Output format: [4-byte BE len][4-byte zeros][opus payload] × N
+ */
+function wavToZeppOpus(wavBuffer: Buffer): Buffer {
+  // Resample to 16kHz mono s16le PCM via ffmpeg
+  const result = spawnSync('ffmpeg', [
+    '-v', 'error',
+    '-f', 'wav',
+    '-i', 'pipe:0',
+    '-f', 's16le',
+    '-ar', String(RATE),
+    '-ac', String(CHANNELS),
+    'pipe:1',
+  ], { input: wavBuffer, maxBuffer: 20 * 1024 * 1024 });
+  if (result.error) throw new Error(`ffmpeg spawn failed: ${result.error.message}`);
+  if (result.status !== 0) throw new Error(`ffmpeg failed: ${result.stderr?.toString()}`);
+  const pcm = result.stdout as Buffer;
 
-    const chunks: Buffer[] = [];
-    const errChunks: Buffer[] = [];
+  // Encode PCM to Opus frames and wrap in Zepp OS format
+  const encoder = new OpusScript(RATE, CHANNELS, OpusScript.Application.AUDIO);
+  const bytesPerFrame = FRAME_SIZE * CHANNELS * 2; // 16-bit samples
+  const parts: Buffer[] = [];
 
-    ffmpeg.stdout.on('data', (chunk: Buffer) => chunks.push(chunk));
-    ffmpeg.stderr.on('data', (chunk: Buffer) => errChunks.push(chunk));
+  for (let offset = 0; offset + bytesPerFrame <= pcm.length; offset += bytesPerFrame) {
+    const framePcm = pcm.subarray(offset, offset + bytesPerFrame);
+    const encoded = encoder.encode(framePcm, FRAME_SIZE);
+    const header = Buffer.alloc(8);
+    header.writeUInt32BE(encoded.length, 0); // 4-byte BE length
+    // bytes 4-7 left as zeros
+    parts.push(header, Buffer.from(encoded));
+  }
 
-    ffmpeg.on('close', (code) => {
-      if (code !== 0) {
-        const errMsg = Buffer.concat(errChunks).toString();
-        reject(new Error(`ffmpeg exited with code ${code}: ${errMsg}`));
-        return;
-      }
-      resolve(Buffer.concat(chunks));
-    });
-
-    ffmpeg.on('error', (err) => {
-      reject(new Error(`ffmpeg spawn error: ${err.message}`));
-    });
-
-    ffmpeg.stdin.write(wavBuffer);
-    ffmpeg.stdin.end();
-  });
+  return Buffer.concat(parts);
 }
