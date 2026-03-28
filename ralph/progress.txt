@@ -17,6 +17,8 @@ Started: Ne 22. března 2026, 13:31:24 CET
 - `BaseSideService.onRequest(req, res)`: `req` is `ArrayBuffer` (binary content type); `res(null, Buffer.from(ab))` sends response back — must pass a Buffer (not raw ArrayBuffer) so the zml protocol's `.copy()` call works
 - `@zos/fs` paths are relative to the app `/data` dir; `data://foo.opus` → path `'foo.opus'` in `openSync`/`statSync`/`writeSync`
 
+- LLM abstraction: `registerProvider(name, fn)` + `callLLM(options)` pattern in `server/src/llm.ts`; providers register themselves, `callLLM` dispatches and caps history
+
 ---
 
 ## 2026-03-22 - US-002
@@ -95,4 +97,16 @@ Started: Ne 22. března 2026, 13:31:24 CET
   - `fetch` and `FormData` are available globally in Node 18+ (no extra packages needed)
   - Express handlers can use `.then/.catch` chains without being `async` functions — avoids unhandled rejection issues with older express versions
   - Server response format changed from raw audio bytes to JSON `{ question }` — US-014 Side Service update must account for this (and US-013 will further change it to include audio+answer+conversation)
+---
+
+## 2026-03-28 - US-008
+- Created `server/src/llm.ts` with LLM provider abstraction layer
+- Exports: `Message` type, `LLMProviderFn` type, `LLMCallOptions` interface, `registerProvider()`, `callLLM()`
+- `callLLM` caps conversation history to `maxTurns` (default 10) before dispatching to provider
+- Provider registry uses `Record<string, LLMProviderFn>` — new providers registered with `registerProvider(name, fn)`
+- Files changed: server/src/llm.ts (new), ralph/prd.json, ralph/progress.txt
+- **Learnings for future iterations:**
+  - Provider pattern: `registerProvider('groq', fn)` in each provider file; `callLLM` dispatches by name — no switch/case needed in the core
+  - `callLLM` does NOT import any provider — providers must be imported by `index.ts` to trigger registration (side-effect import pattern)
+  - History capping: `messages.slice(-maxTurns)` keeps the most recent exchanges
 ---
