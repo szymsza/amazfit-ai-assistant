@@ -73,6 +73,10 @@ try {
         const audioBuffer = base64ToArrayBuffer(b64)
         console.log('[side] decoded audio size:', audioBuffer.byteLength)
 
+        // Audio received by phone — notify watch to transition to Waiting
+        const call = (this as unknown as { call: (d: { method: string; params: Record<string, unknown> }) => void }).call.bind(this)
+        call({ method: 'stateUpdate', params: { state: 'waiting' } })
+
         const serverUrl = settings.settingsStorage.getItem(SERVER_URL_KEY) ?? DEFAULT_SERVER_URL
         const apiToken = settings.settingsStorage.getItem(API_TOKEN_KEY) ?? DEFAULT_API_TOKEN
 

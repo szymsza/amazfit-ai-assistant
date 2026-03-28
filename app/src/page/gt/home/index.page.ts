@@ -20,6 +20,7 @@ const enum AppState {
   Recording = 'recording',
   Sending = 'sending',
   Waiting = 'waiting',
+  Receiving = 'receiving',
   Playing = 'playing',
 }
 
@@ -28,6 +29,7 @@ const STATE_LABELS: Record<AppState, string> = {
   [AppState.Recording]: 'Recording...',
   [AppState.Sending]: 'Sending...',
   [AppState.Waiting]: 'Waiting...',
+  [AppState.Receiving]: 'Receiving...',
   [AppState.Playing]: 'Playing...',
 }
 
@@ -35,7 +37,8 @@ const BTN_COLORS: Record<AppState, number> = {
   [AppState.Idle]: 0xe63946,
   [AppState.Recording]: 0xff2244,
   [AppState.Sending]: 0x888888,
-  [AppState.Waiting]: 0x888888,
+  [AppState.Waiting]: 0xffa500,
+  [AppState.Receiving]: 0x4caf50,
   [AppState.Playing]: 0x2196f3,
 }
 
@@ -123,6 +126,7 @@ function sendToSideService(): void {
   const b64Audio = arrayBufferToBase64(audioBuffer)
   requestFn!(b64Audio as unknown as ArrayBuffer)
     .then((responseData: unknown) => {
+      setState(AppState.Receiving)
       const ab = base64ToArrayBuffer(responseData as string)
       logger.debug('got response, size=' + ab.byteLength)
       const wfd = openSync({ path: RESPONSE_FILE, flag: O_RDWR | O_CREAT | O_TRUNC })
@@ -152,6 +156,11 @@ function startRecording(): void {
     return
   }
   try {
+    // Truncate recording file so stale bytes from a longer previous recording aren't included
+    try {
+      const fd = openSync({ path: RECORDING_FILE, flag: O_RDWR | O_CREAT | O_TRUNC })
+      closeSync({ fd })
+    } catch (_) { /* ignore */ }
     recorder.setFormat(mediaCodec.OPUS, { target_file: RECORDING_PATH })
     recorder.start()
     setState(AppState.Recording)
@@ -175,6 +184,14 @@ Page(BasePage({
     requestFn = (data: ArrayBuffer) => this.request(data)
     logger.debug('page onInit')
     initMediaInstances()
+  },
+
+  onCall(data: unknown) {
+    const d = data as { method: string; params: { state: string } }
+    if (d?.method === 'stateUpdate') {
+      logger.debug('onCall stateUpdate: ' + d.params.state)
+      setState(d.params.state as AppState)
+    }
   },
 
   build() {
