@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import { transcribeAudio } from './stt.js';
+import './providers/groq.js';
 
 const app = express();
 const PORT = process.env.PORT ?? '3000';

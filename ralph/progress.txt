@@ -18,6 +18,7 @@ Started: Ne 22. března 2026, 13:31:24 CET
 - `@zos/fs` paths are relative to the app `/data` dir; `data://foo.opus` → path `'foo.opus'` in `openSync`/`statSync`/`writeSync`
 
 - LLM abstraction: `registerProvider(name, fn)` + `callLLM(options)` pattern in `server/src/llm.ts`; providers register themselves, `callLLM` dispatches and caps history
+- LLM providers live in `server/src/providers/`; each file calls `registerProvider` on import; `index.ts` side-effect-imports them (`import './providers/groq.js'`)
 
 ---
 
@@ -109,4 +110,17 @@ Started: Ne 22. března 2026, 13:31:24 CET
   - Provider pattern: `registerProvider('groq', fn)` in each provider file; `callLLM` dispatches by name — no switch/case needed in the core
   - `callLLM` does NOT import any provider — providers must be imported by `index.ts` to trigger registration (side-effect import pattern)
   - History capping: `messages.slice(-maxTurns)` keeps the most recent exchanges
+---
+
+## 2026-03-28 - US-009
+- Created `server/src/providers/groq.ts` — Groq chat completions provider
+- POSTs to `https://api.groq.com/openai/v1/chat/completions` with model + messages
+- Default model: `moonshotai/kimi-k2-instruct`; uses Groq API key passed by caller
+- Registered via `registerProvider('groq', groqProvider)` on import
+- Updated `server/src/index.ts` to side-effect-import `./providers/groq.js`
+- Files changed: server/src/providers/groq.ts (new), server/src/index.ts, ralph/prd.json, ralph/progress.txt
+- **Learnings for future iterations:**
+  - Provider files live in `server/src/providers/`; each calls `registerProvider(name, fn)` on import; `index.ts` side-effect-imports them to trigger registration
+  - Groq chat API response shape: `{ choices: [{ message: { content: string } }] }` — extract `choices[0].message.content`
+  - Empty `model` string falls back to `DEFAULT_MODEL` via `model || DEFAULT_MODEL`
 ---
