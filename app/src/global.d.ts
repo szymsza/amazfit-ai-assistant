@@ -1,4 +1,4 @@
-/// <reference path="node_modules/@zeppos/device-types/dist/index.d.ts" />
+/// <reference path="../node_modules/@zeppos/device-types/dist/index.d.ts" />
 
 // Zepp OS runtime globals not covered by @zeppos/device-types
 declare function AppSideService(option: Record<string, unknown>): void

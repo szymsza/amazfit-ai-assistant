@@ -8,7 +8,8 @@
     "compile": "tsc --project tsconfig.json",
     "dev": "tsc --project tsconfig.json && zeus dev",
     "build": "tsc --project tsconfig.json && zeus build",
-    "preview": "tsc --project tsconfig.json && zeus preview"
+    "preview": "tsc --project tsconfig.json && zeus preview",
+    "watch": "tsc --watch --project tsconfig.json"
   },
   "author": "",
   "license": "ISC",

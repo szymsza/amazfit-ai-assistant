@@ -6,17 +6,18 @@
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "rootDir": ".",
+    "rootDir": "./src",
+    "outDir": ".",
     "noEmit": false,
     "typeRoots": []
   },
   "include": [
-    "global.d.ts",
-    "app.ts",
-    "page/**/*.ts",
-    "app-side/**/*.ts",
-    "setting/**/*.ts",
-    "utils/**/*.ts"
+    "src/global.d.ts",
+    "src/app.ts",
+    "src/page/**/*.ts",
+    "src/app-side/**/*.ts",
+    "src/setting/**/*.ts",
+    "src/utils/**/*.ts"
   ],
   "exclude": ["node_modules", "**/node_modules/*", "../node_modules"]
 }
