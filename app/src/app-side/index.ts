@@ -10,7 +10,7 @@ const LLM_KEY_KEY = 'llmKey'
 const TTS_VOICE_KEY = 'ttsVoice'
 const MAX_TURNS_KEY = 'maxTurns'
 
-const DEFAULT_SERVER_URL = 'http://localhost:3000'
+const DEFAULT_SERVER_URL = 'YOUR_SERVER_URL/'
 const DEFAULT_API_TOKEN = 'YOUR_API_TOKEN'
 const DEFAULT_MAX_TURNS = 10
 
