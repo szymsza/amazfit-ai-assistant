@@ -72,11 +72,12 @@ app.post('/api/ask', (req: Request, res: Response) => {
             { role: 'assistant', content: answer },
           ];
 
-          const ttsText = truncateForTts(answer, 50);
+          const ttsText = truncateForTts(answer);
           if (ttsText !== answer) {
             console.log(`[${new Date().toISOString()}] TTS truncated: ${answer.split(/\s+/).length} -> ${ttsText.split(/\s+/).length} words`);
           }
-          return synthesizeSpeech(ttsText, body.groqKey, ttsVoice).then((mp3Buffer) => {
+          const ttsInput = `[friendly] ${ttsText}`;
+          return synthesizeSpeech(ttsInput, body.groqKey, ttsVoice).then((mp3Buffer) => {
             console.log(`[${new Date().toISOString()}] TTS -> ${mp3Buffer.length}b MP3`);
             try { writeFileSync('/tmp/debug_tts_output.bin', mp3Buffer); } catch (_) { /* ignore */ }
             res.json({

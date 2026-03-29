@@ -1,7 +1,7 @@
 import { spawnSync } from 'child_process';
 
 const GROQ_TTS_URL = 'https://api.groq.com/openai/v1/audio/speech';
-const DEFAULT_VOICE = 'austin';
+const DEFAULT_VOICE = 'troy';
 const TTS_MODEL = 'canopylabs/orpheus-v1-english';
 
 const RATE = 16000;
@@ -36,13 +36,13 @@ export async function synthesizeSpeech(
   return wavToMp3(wavBuffer);
 }
 
-/** Convert WAV to MP3 using ffmpeg (16kbps for minimal file size, voice only). */
+/** Convert WAV to MP3 using ffmpeg (18kbps for good quality/size balance). */
 export function wavToMp3(wavBuffer: Buffer): Buffer {
   const result = spawnSync('ffmpeg', [
     '-v', 'error',
     '-i', 'pipe:0',
     '-c:a', 'libmp3lame',
-    '-b:a', '16k',
+    '-b:a', '18k',
     '-f', 'mp3',
     'pipe:1',
   ], { input: wavBuffer, maxBuffer: 20 * 1024 * 1024 });
