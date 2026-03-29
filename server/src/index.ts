@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 import express, { Request, Response } from 'express';
 import { transcribeAudio } from './stt';
 import { callLLM, type Message } from './llm';
@@ -72,19 +72,15 @@ app.post('/api/ask', (req: Request, res: Response) => {
             { role: 'assistant', content: answer },
           ];
 
-          // TODO: TTS output (WAV->Zepp OS Opus) does not play on the watch.
-          // The watch expects the proprietary Zepp OS framed Opus format
-          // ([4-byte BE len][4-byte pad][opus payload] per frame).
-          // Current wavToZeppOpus() conversion produces frames the watch rejects.
-          // Need to figure out correct encoding parameters / frame structure.
           const ttsText = truncateForTts(answer, 50);
           if (ttsText !== answer) {
             console.log(`[${new Date().toISOString()}] TTS truncated: ${answer.split(/\s+/).length} -> ${ttsText.split(/\s+/).length} words`);
           }
-          return synthesizeSpeech(ttsText, body.groqKey, ttsVoice).then((opusBuffer) => {
-            console.log(`[${new Date().toISOString()}] TTS -> ${opusBuffer.length}b OPUS`);
+          return synthesizeSpeech(ttsText, body.groqKey, ttsVoice).then((mp3Buffer) => {
+            console.log(`[${new Date().toISOString()}] TTS -> ${mp3Buffer.length}b MP3`);
+            try { writeFileSync('/tmp/debug_tts_output.bin', mp3Buffer); } catch (_) { /* ignore */ }
             res.json({
-              audio: opusBuffer.toString('base64'),
+              audio: mp3Buffer.toString('base64'),
               question,
               answer,
               conversation: updatedConversation,

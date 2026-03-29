@@ -50,11 +50,11 @@ const BTN_COLORS: Record<AppState, number> = {
 
 // data:// paths used by Recorder/Player APIs
 const RECORDING_PATH = 'data://recording.opus'
-const RESPONSE_PATH = 'data://response.opus'
+const RESPONSE_PATH = 'data://response.mp3'
 
 // relative paths used by @zos/fs (relative to the app /data directory)
 const RECORDING_FILE = 'recording.opus'
-const RESPONSE_FILE = 'response.opus'
+const RESPONSE_FILE = 'response.mp3'
 
 // Module-level state (Page.Option only accepts lifecycle methods + state object)
 let appState = AppState.Idle
